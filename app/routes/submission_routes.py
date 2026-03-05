@@ -10,10 +10,14 @@ router = APIRouter(prefix="/submissions", tags=["Submissions"])
 # CREATE SUBMISSION
 @router.post("/")
 def create_submission(data: SubmissionCreate):
+
+    # convert date to string
+    date_str = data.date.isoformat()
+
     existing = submissions_collection.find_one({
         "category": data.category,
         "subcategory": data.subcategory,
-        "date": data.date
+        "date": date_str
     })
 
     if existing:
@@ -23,6 +27,7 @@ def create_submission(data: SubmissionCreate):
         }
 
     submission_data = data.dict()
+    submission_data["date"] = date_str
     submission_data["createdAt"] = datetime.utcnow()
 
     result = submissions_collection.insert_one(submission_data)
@@ -36,7 +41,9 @@ def create_submission(data: SubmissionCreate):
 # GET SUBMISSIONS BY DATE
 @router.get("/{date}")
 def get_submissions_by_date(date: str):
+
     submissions = []
+
     for s in submissions_collection.find({"date": date}):
         submissions.append({
             "category": s["category"],
@@ -44,4 +51,5 @@ def get_submissions_by_date(date: str):
             "username": s["username"],
             "date": s["date"]
         })
+
     return submissions
